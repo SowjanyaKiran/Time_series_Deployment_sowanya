@@ -70,8 +70,7 @@ streamlit run app.py
 ## 📈 Example Forecast Visualization
 
 *Forecast using SARIMA model (green) and 95% confidence interval:*
-
-![Forecast Example](https://github.com/PratikPhysics/time_series/blob/main/sarima.png)
+(https://github.com/SowjanyaKiran/Arima_Sarima_Time_series_Deployment_sowanya/)
 
 ---
 
