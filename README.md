@@ -1,124 +1,70 @@
- #Gold Price Forecasting Using Time Series Analysis (ARIMA & SARIMA)#
-This project delves into time series analysis and forecasting of monthly gold prices utilizing the ARIMA and SARIMA models. It comes equipped with a Streamlit web application that enables interactive exploration, model selection, and dynamic forecasting.
+🪙 Gold Price Forecasting Using Time Series Analysis (ARIMA & SARIMA)
+This project performs in-depth time series analysis and forecasting on monthly gold prices using ARIMA and SARIMA models. It also features a full-fledged Streamlit app for interactive exploration, model selection, and dynamic forecasting.
 
-Project Highlights
-Time Series Workflow:
+📦 Project Features
+✅ Time Series Workflow Includes:
+Downloading gold price data from Yahoo Finance
+Visualization of trends over time
+STL decomposition to separate trend, seasonality, and noise
+ADF test for stationarity
+Differencing to make the series stationary
+ACF and PACF plots to determine model orders
+Model building with ARIMA and SARIMA
+Forecasting next 12 months
+Model comparison using AIC/BIC
+Model saving using pickle
+✅ Interactive Streamlit Web App:
+Choose between ARIMA and SARIMA models
+Forecast up to 36 months into the future
+Visualize forecast with confidence intervals
+View model summary and raw historical data
+🗃️ Repository Structure
 
-Data Acquisition: Fetch gold price data via Yahoo Finance
-
-Trend Visualization: Plot time-based price movements
-
-STL Decomposition: Separate trend, seasonality, and noise
-
-Stationarity Testing: Apply ADF test to check stationarity
-
-Differencing: Stationarize the series
-
-ACF & PACF Plots: Identify model orders
-
-Model Building: Implement ARIMA & SARIMA models
-
-Forecasting: Predict the next 12 months
-
-Model Comparison: Evaluate models using AIC/BIC
-
-Model Persistence: Save models with pickle
-
-Streamlit Web Application:
-
-Model Selection: Choose between ARIMA and SARIMA
-
-Forecasting: Predict for up to 36 months ahead
-
-Visualization: Display forecasts with confidence intervals
-
-Raw Data: Access historical data and model summary
-
-Repository Structure
-bash
-Copy
 📁 gold-price-forecasting/
-├── app.py                   # Main Streamlit app file
-├── arima_gold_model.pkl      # Trained ARIMA model
-├── sarima_gold_model.pkl     # Trained SARIMA model
-├── model_training.ipynb      # Notebook for analysis and model training
-├── requirements.txt          # List of dependencies
-└── README.md                 # Project description and usage
-How to Get Started
-Clone the Repository
+├── app.py                   # Streamlit app
+├── arima\_gold\_model.pkl     # Trained ARIMA model (auto-generated)
+├── sarima\_gold\_model.pkl    # Trained SARIMA model (auto-generated)
+├── model\_training.ipynb     # Main analysis & modeling notebook (optional)
+├── requirements.txt         # Required packages
+└── README.md                # Project overview
 
-bash
-Copy
+🚀 Getting Started
+1. Clone the Repository
 git clone https://github.com/your-username/gold-price-forecasting.git
 cd gold-price-forecasting
-Install Dependencies
-Use pip to install required libraries:
+2. Install Dependencies
+Install required libraries using pip:
 
-nginx
-Copy
 pip install -r requirements.txt
-Run the Streamlit App
-Launch the app using:
-
-arduino
-Copy
+3. Run the Streamlit App
 streamlit run app.py
-Example Forecast Visualization
-Check out an example forecast using the SARIMA model, along with a 95% confidence interval:
-Example Forecast
+📈 Example Forecast Visualization
+Forecast using SARIMA model (green) and 95% confidence interval: (https://github.com/SowjanyaKiran/Arima_Sarima_Time_series_Deployment_sowanya/)
 
-Model Details
-Model	AIC/BIC	Seasonality	Stationarity	Forecast Horizon
+🧠 Model Details
+Model	AIC / BIC	Seasonality	Stationarity	Forecast Horizon
 ARIMA	Evaluated	❌ No	Differenced	Short-term
 SARIMA	Evaluated	✅ Yes	Differenced	Seasonal-aware
-
-ACF & PACF Interpretation
-ACF (Autocorrelation Function):
-
-Spikes at seasonal lags indicate the need for seasonal terms in SARIMA.
-
-Cut-off after lag p suggests the AR order.
-
-Cut-off after lag q suggests the MA order.
-
-Sample ADF Test Output
-yaml
-Copy
+🔬 ACF & PACF Interpretation Tips:
+ACF with spikes at seasonal lags → Add seasonal terms
+PACF cut-off after lag p → Suggests AR model order
+ACF cut-off after lag q → Suggests MA model order
+🧪 ADF Test Result Sample Output
 ADF Statistic: -1.56
 p-value: 0.51
-Conclusion: Time series is **non-stationary**. Differencing required.
-Technologies Used
-Python: Core programming language
+Conclusion: Time series is **non-stationary**. Differencing is required.
+🧰 Technologies Used
+Python
+Pandas, Matplotlib, Statsmodels
+yfinance for data fetching
+Streamlit for UI
+Pickle for model persistence
+📄 License
+This project is open-source and available under the MIT License.
 
-Pandas & Matplotlib: Data manipulation and visualization
+👤 Author
+Developed by [Sowjanya Kiran] 📧 usowjanyakiran@gmail.com 🌐 https://github.com/SowjanyaKiran/Time_series_Deployment_sowanya/
 
-Statsmodels: ARIMA and SARIMA model implementation
-
-yfinance: Fetching financial data
-
-Streamlit: User interface for model interaction
-
-Pickle: Model serialization for persistence
-
-License
-This project is open-source, licensed under the MIT License.
-
-Author
-Developed by [Sowjanya Kiran]
-📧 Email: usowjanyakiran@gmail.com
-🌐 GitHub: SowjanyaKiran/Time_series_Deployment_sowanya
-
-Related Projects
+🔗 Related Projects
 Time Series Forecasting with Prophet
-
 Stock Price Prediction using LSTM
-
-requirements.txt
-If you're looking to deploy or share this project, use this list in your requirements.txt:
-
-streamlit
-pandas
-matplotlib
-statsmodels
-yfinance
-python-dateutil
