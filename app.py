@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import pickle
 import yfinance as yf
-from datetime import datetime
+from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 
 # Page config
@@ -12,13 +12,24 @@ st.set_page_config(page_title="Gold Price Forecasting", layout="wide")
 st.title("Gold Price Forecasting App")
 st.write("Forecasting gold prices using ARIMA and SARIMA models.")
 
-# Sidebar input
+# Sidebar settings
 with st.sidebar:
     st.header("Settings")
-    forecast_months = st.slider("Forecast Period (months)", 1, 36, 12)
-    st.info("Both ARIMA and SARIMA models will be shown below.")
+    
+    option = st.radio("Select Forecast Mode", ["By Months", "By End Date"])
+    
+    if option == "By Months":
+        forecast_months = st.slider("Forecast Period (months)", 1, 36, 12)
+        forecast_end = None
+    else:
+        start_date = datetime.today().date()
+        forecast_end = st.date_input("Select Forecast End Date", min_value=start_date)
+        delta = relativedelta(forecast_end, start_date)
+        forecast_months = delta.years * 12 + delta.months + (1 if delta.days > 0 else 0)
 
-# Load historical data
+    st.info(f"Forecasting for {forecast_months} month(s)")
+
+# Load gold price data
 @st.cache_data
 def load_gold_data():
     end_date = datetime.now().strftime('%Y-%m-%d')
@@ -28,7 +39,7 @@ def load_gold_data():
     df.dropna(inplace=True)
     return df
 
-# Plotting function
+# Forecast plot
 def plot_forecast(gold, forecast, conf_int, forecast_months, model_name):
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(gold.index, gold['Price'], label='Historical Prices', linewidth=2)
@@ -50,6 +61,7 @@ def plot_forecast(gold, forecast, conf_int, forecast_months, model_name):
     plt.tight_layout()
     return fig
 
+# Forecast + plot + summary
 def display_model_results(model, gold, model_name):
     forecast = model.get_forecast(steps=forecast_months)
     conf_int = forecast.conf_int()
@@ -82,7 +94,7 @@ def display_model_results(model, gold, model_name):
         except:
             st.warning("Model summary not available.")
 
-# Main execution
+# Main
 def main():
     gold = load_gold_data()
 
