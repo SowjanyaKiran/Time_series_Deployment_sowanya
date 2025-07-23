@@ -6,128 +6,139 @@ import yfinance as yf
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 
-# Page configuration
+# ---------- Page Setup ----------
 st.set_page_config(page_title="Gold Price Forecasting", layout="wide")
+st.title("📈 Gold Price Forecasting App")
+st.write("Predict gold prices using ARIMA or SARIMA models.")
 
-st.title("Gold Price Forecasting App")
-st.write("Forecasting gold prices using ARIMA and SARIMA models.")
-
-# Sidebar for user input
+# ---------- Sidebar ----------
 with st.sidebar:
-    st.header("Settings")
+    st.header("🔧 Forecast Settings")
+    model_choice = st.selectbox("Select Model", ["ARIMA", "SARIMA"])
+    mode = st.radio("Forecast Mode", ["Months Ahead", "Specific Date"])
+    currency = st.radio("Currency", ["USD ($)", "INR (₹)"])
+    usd_to_inr = 83.0  # Static exchange rate
 
-    option = st.radio("Select Forecast Mode", ["By Months", "By End Date"])
-
-    if option == "By Months":
+    forecast_months = 0
+    if mode == "Months Ahead":
         forecast_months = st.slider("Forecast Period (months)", 1, 36, 12)
     else:
-        start_date = datetime.today().date()
-        forecast_end = st.date_input("Select Forecast End Date", min_value=start_date)
-
-        if forecast_end <= start_date:
-            st.warning("Please select a future date for forecasting.")
-            forecast_months = 0
+        start_date = date.today()
+        selected_date = st.date_input("Select Forecast End Date", min_value=start_date)
+        if selected_date <= start_date:
+            st.warning("Please select a future date.")
         else:
-            delta = relativedelta(forecast_end, start_date)
+            delta = relativedelta(selected_date, start_date)
             forecast_months = delta.years * 12 + delta.months + (1 if delta.days > 0 else 0)
 
     if forecast_months > 0:
         st.info(f"Forecasting for {forecast_months} month(s)")
-    else:
-        st.error("Invalid forecast period. Please adjust your input.")
 
-# Load historical gold price data
+# ---------- Load Data ----------
 @st.cache_data
 def load_gold_data():
-    end_date = datetime.now().strftime('%Y-%m-%d')
-    data = yf.download("GC=F", start="2005-01-01", end=end_date, interval="1mo")
-    df = data[['Close']].copy()
-    df.columns = ['Price']
-    df.dropna(inplace=True)
+    data = yf.download("GC=F", start="2005-01-01", end=datetime.today(), interval="1mo")
+    df = data[["Close"]].rename(columns={"Close": "Price"}).dropna()
     return df
 
-# Plotting function
-def plot_forecast(gold, forecast, conf_int, forecast_months, model_name):
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(gold.index, gold['Price'], label='Historical Prices', linewidth=2)
+# ---------- Plot Forecast ----------
+def plot_forecast(history, forecast_df, model_name, currency):
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.plot(history.index, history['Price'], label="Historical Prices", linewidth=2)
 
-    forecast_index = pd.date_range(
-        start=gold.index[-1] + relativedelta(months=1),
-        periods=forecast_months,
-        freq='M'
-    )
-    ax.plot(forecast_index, forecast.predicted_mean, label=f'{model_name} Forecast', linestyle='--')
-    ax.fill_between(forecast_index, conf_int.iloc[:, 0], conf_int.iloc[:, 1], alpha=0.2)
+    ax.plot(forecast_df.index, forecast_df['Forecast'], linestyle='--', label="Forecast", linewidth=2)
+    ax.fill_between(forecast_df.index, forecast_df['Lower CI'], forecast_df['Upper CI'], alpha=0.3, label="95% Confidence Interval")
 
-    ax.set_title(f"{model_name} Forecast")
+    ax.set_title(f"{model_name} Forecast", fontsize=16)
     ax.set_xlabel("Date")
-    ax.set_ylabel("Price (USD)")
+    ax.set_ylabel("Price (INR)" if "INR" in currency else "Price (USD)")
     ax.legend()
     ax.grid(True)
     plt.xticks(rotation=45)
-    plt.tight_layout()
-    return fig
-
-# Function to handle model output
-def display_model_results(model, gold, model_name):
-    forecast = model.get_forecast(steps=forecast_months)
-    conf_int = forecast.conf_int()
-
-    forecast_index = pd.date_range(
-        start=gold.index[-1] + relativedelta(months=1),
-        periods=forecast_months,
-        freq='M'
-    )
-    forecast_df = pd.DataFrame({
-        'Date': forecast_index,
-        'Forecast': forecast.predicted_mean,
-        'Lower CI': conf_int.iloc[:, 0],
-        'Upper CI': conf_int.iloc[:, 1]
-    }).set_index('Date')
-
-    st.subheader(f"{model_name} - {forecast_months}-Month Forecast")
-    st.dataframe(forecast_df.style.format({
-        "Forecast": "${:,.2f}",
-        "Lower CI": "${:,.2f}",
-        "Upper CI": "${:,.2f}"
-    }))
-
-    fig = plot_forecast(gold, forecast, conf_int, forecast_months, model_name)
     st.pyplot(fig)
 
-    with st.expander(f"{model_name} Model Summary"):
-        try:
-            st.text(model.summary())
-        except:
-            st.warning("Model summary not available.")
+# ---------- Load Model ----------
+def load_model(model_name):
+    filename = "arima_gold_model.pkl" if model_name == "ARIMA" else "sarima_gold_model.pkl"
+    try:
+        with open(filename, "rb") as f:
+            model = pickle.load(f)
+        return model
+    except Exception as e:
+        st.error(f"❌ Error loading {model_name} model: {e}")
+        return None
 
-# Main execution
+# ---------- Main Forecast Logic ----------
 def main():
     if forecast_months <= 0:
-        st.stop()  # Stop the app if forecast period is invalid
+        st.stop()
 
     gold = load_gold_data()
 
-    with st.expander("View Historical Gold Prices"):
-        st.dataframe(gold.style.format({"Price": "${:,.2f}"}))
+    # Convert to INR if selected
+    if "INR" in currency:
+        gold["Price"] *= usd_to_inr
 
-    # Load ARIMA model
+    symbol = "₹" if "INR" in currency else "$"
+
+    with st.expander("📜 View Historical Gold Prices"):
+        st.dataframe(gold.style.format({"Price": f"{symbol}{{:,.2f}}"}))
+
+    model = load_model(model_choice)
+    if model is None:
+        return
+
     try:
-        with open("arima_gold_model.pkl", "rb") as f:
-            arima_model = pickle.load(f)
-        st.success("ARIMA model loaded successfully")
-        display_model_results(arima_model, gold, "ARIMA")
-    except Exception as e:
-        st.error(f"Error loading ARIMA model: {str(e)}")
+        forecast = model.get_forecast(steps=forecast_months)
+        conf_int = forecast.conf_int()
+        forecast_index = pd.date_range(start=gold.index[-1] + relativedelta(months=1), periods=forecast_months, freq='M')
 
-    # Load SARIMA model
-    try:
-        with open("sarima_gold_model.pkl", "rb") as f:
-            sarima_model = pickle.load(f)
-        st.success("SARIMA model loaded successfully")
-        display_model_results(sarima_model, gold, "SARIMA")
-    except Exception as e:
-        st.error(f"Error loading SARIMA model: {str(e)}")
+        forecast_df = pd.DataFrame({
+            "Forecast": forecast.predicted_mean,
+            "Lower CI": conf_int.iloc[:, 0],
+            "Upper CI": conf_int.iloc[:, 1]
+        }, index=forecast_index)
 
+        if "INR" in currency:
+            forecast_df *= usd_to_inr
+
+        forecast_df["Month"] = forecast_df.index.strftime("%Y-%m")
+
+        # Show Table
+        st.subheader(f"{model_choice} Forecast for Next {forecast_months} Month(s)")
+        st.dataframe(
+            forecast_df.drop(columns=["Month"]).style.format({
+                "Forecast": f"{symbol}{{:,.2f}}",
+                "Lower CI": f"{symbol}{{:,.2f}}",
+                "Upper CI": f"{symbol}{{:,.2f}}"
+            }), use_container_width=True
+        )
+
+        # Plot
+        st.subheader("📈 Forecast Chart")
+        plot_forecast(gold, forecast_df, model_choice, currency)
+
+        # Model Summary
+        with st.expander("📘 Model Summary"):
+            try:
+                st.text(model.summary())
+            except:
+                st.warning("Model summary not available.")
+
+        # Specific date display
+        if mode == "Specific Date":
+            selected_month_key = selected_date.replace(day=1).strftime("%Y-%m")
+            if selected_month_key in forecast_df["Month"].values:
+                pred = forecast_df.loc[forecast_df["Month"] == selected_month_key].iloc[0]
+                st.subheader(f"📅 Forecast for {selected_date.strftime('%B %Y')}")
+                st.metric("Predicted Price", f"{symbol}{pred['Forecast']:.2f}",
+                          delta=f"± {(pred['Upper CI'] - pred['Lower CI']) / 2:.2f}")
+            else:
+                st.warning("Selected date is outside the forecast range.")
+
+    except Exception as e:
+        st.error(f"❌ Forecast failed: {e}")
+
+# ---------- Run App ----------
 if __name__ == "__main__":
     main()
