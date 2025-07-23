@@ -107,6 +107,11 @@ def main():
 
         forecast_df["Month"] = forecast_df.index.strftime("%Y-%m")
 
+        # Notify if forecast has missing values
+        if forecast_df.isnull().values.any():
+            st.warning("⚠️ Warning: Forecast data contains missing (NaN) values. Please check the model or retrain it.")
+            st.dataframe(forecast_df)
+
         # Show Forecast Table
         st.subheader(f"{model_choice} Forecast for Next {forecast_months} Month(s)")
         st.dataframe(
@@ -135,9 +140,12 @@ def main():
 
             if selected_month_key in available_months:
                 pred = forecast_df.loc[forecast_df["Month"] == selected_month_key].iloc[0]
-                st.subheader(f"📅 Forecast for {selected_date.strftime('%B %Y')}")
-                st.metric("Predicted Price", f"{symbol}{pred['Forecast']:.2f}",
-                          delta=f"± {(pred['Upper CI'] - pred['Lower CI']) / 2:.2f}")
+                if pd.isna(pred["Forecast"]):
+                    st.error("⚠️ Prediction value is NaN. Please retrain the model or check data quality.")
+                else:
+                    st.subheader(f"📅 Forecast for {selected_date.strftime('%B %Y')}")
+                    st.metric("Predicted Price", f"{symbol}{pred['Forecast']:.2f}",
+                              delta=f"± {(pred['Upper CI'] - pred['Lower CI']) / 2:.2f}")
             else:
                 st.warning(
                     f"Selected date **{selected_date.strftime('%B %Y')}** is outside the forecast range.\n\n"
