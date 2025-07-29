@@ -110,12 +110,6 @@ Conclusion: Time series is **non-stationary**. Differencing is required.
 
 ---
 
-## 📄 License
-
-This project is open-source and available under the [MIT License](LICENSE).
-
----
-
 ## 👤 Author
 
 Developed by **\[sowjanya kiran]**
@@ -130,21 +124,3 @@ Developed by **\[sowjanya kiran]**
 * Stock Price Prediction using LSTM
 
 ```
-
----
-
-## 📌 `requirements.txt`
-
-If you want to deploy or share the project, use this for your `requirements.txt`:
-
-```
-
-streamlit
-pandas
-matplotlib
-statsmodels
-yfinance
-python-dateutil
-
-```
-
